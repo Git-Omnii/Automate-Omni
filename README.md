@@ -1,4 +1,4 @@
-# IT Support Level 1 – VIP Ticket Notifications
+# IT Support Level – VIP Ticket Notifications
 
 A Power Automate flow that monitors a shared mailbox for VIP incident alerts from Jira and automatically posts the ticket link to a Microsoft Teams channel for prompt L1 response.
 
