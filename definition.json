@@ -1,0 +1,123 @@
+{
+  "name": "1f571a08-230c-476d-9ee1-a5827661d946",
+  "id": "/providers/Microsoft.Flow/flows/1f571a08-230c-476d-9ee1-a5827661d946",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "IT Support Level 1 VIP Ticket Notifications",
+    "definition": {
+      "metadata": {
+        "workflowEntityId": null,
+        "processAdvisorMetadata": null,
+        "flowChargedByPaygo": null,
+        "flowclientsuspensionreason": "None",
+        "flowclientsuspensiontime": null,
+        "flowclientsuspensionreasondetails": null,
+        "creator": {
+          "id": "<YOUR_USER_ID>",
+          "type": "User",
+          "tenantId": "<YOUR_TENANT_ID>"
+        },
+        "provisioningMethod": "FromDefinition",
+        "failureAlertSubscription": true,
+        "clientLastModifiedTime": "2026-04-17T19:56:21.6288218Z",
+        "connectionKeySavedTimeKey": "2026-04-17T19:56:21.6288218Z",
+        "creationSource": "Portal",
+        "modifiedSources": "Portal"
+      },
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_a_new_email_arrives_(V3)": {
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "type": "OpenApiConnectionNotification",
+          "inputs": {
+            "parameters": {
+              "to": "<RECIPIENT_EMAIL>",
+              "from": "<JIRA_AUTOMATION_EMAIL>",
+              "includeAttachments": true,
+              "subjectFilter": "VIP Incident"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+              "connectionName": "shared_office365",
+              "operationId": "OnNewEmailV3"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "description": "When a new email arrives from automation@company.atlassian.net containing the Subject \"VIP Incident\" "
+        }
+      },
+      "actions": {
+        "Post_Incident_Link_in_Teams_Channel": {
+          "runAfter": {
+            "Extracts_URL_after_Specified_Phrasing": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "poster": "Flow bot",
+              "location": "Channel",
+              "body/recipient/groupId": "<TEAMS_GROUP_ID>",
+              "body/recipient/channelId": "<TEAMS_CHANNEL_ID>",
+              "body/messageBody": "<p class=\"editor-paragraph\">A VIP ticket has been submitted and requires prompt attention @{outputs('Extracts_URL_after_Specified_Phrasing')}</p>"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+              "connectionName": "shared_teams",
+              "operationId": "PostMessageToConversation"
+            },
+            "authentication": "@parameters('$authentication')"
+          }
+        },
+        "Parsing_Email": {
+          "runAfter": {},
+          "type": "Compose",
+          "inputs": "@substring(triggerOutputs()?['body/body'], add(indexOf(triggerOutputs()?['body/body'], 'Open Incident Record in main application:'), length('Open Incident Record in main application:')), sub(length(triggerOutputs()?['body/body']), add(indexOf(triggerOutputs()?['body/body'], 'Open Incident Record in main application:'), length('Open Incident Record in main application:'))))"
+        },
+        "Extracts_URL_after_Specified_Phrasing": {
+          "runAfter": {
+            "Parsing_Email": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@substring(triggerOutputs()?['body/body'], indexOf(triggerOutputs()?['body/body'], 'https://<YOUR_JIRA_DOMAIN>.atlassian.net/browse/'), add(38, 10))"
+        }
+      },
+      "outputs": {}
+    },
+    "connectionReferences": {
+      "shared_office365": {
+        "connectionName": "<SHARED_OFFICE365_CONNECTION_NAME>",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_office365",
+        "tier": "NotSpecified",
+        "apiName": "office365",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      },
+      "shared_teams": {
+        "connectionName": "<SHARED_TEAMS_CONNECTION_NAME>",
+        "source": "Embedded",
+        "id": "/providers/Microsoft.PowerApps/apis/shared_teams",
+        "tier": "NotSpecified",
+        "apiName": "teams",
+        "isProcessSimpleApiReferenceConversionAlreadyDone": false
+      }
+    },
+    "flowFailureAlertSubscribed": false,
+    "isManaged": false
+  }
+}
